@@ -281,7 +281,7 @@ const VideoEditor = () => {
       const command = [
         "-i",
         inputFileName,
-        createOptionCommandList(options),
+        ...createOptionCommandList(options),
         outputFileName,
       ];
       await ffmpeg.exec(command);
