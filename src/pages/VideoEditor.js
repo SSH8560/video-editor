@@ -36,13 +36,6 @@ const VideoEditor = () => {
   const [resolution, setResolution] = useState();
   const [isReady, setIsReady] = useState(false);
 
-  const initEditor = (playerState) => {
-    const { duration, videoWidth, videoHeight } = playerState;
-    setIsReady(true);
-    setSliderValues([0, duration]);
-    setResolution([videoWidth, videoHeight]);
-  };
-
   useEffect(() => {
     load();
   }, []);
@@ -76,6 +69,13 @@ const VideoEditor = () => {
       ),
     });
     setIsLoaded(true);
+  };
+
+  const initEditor = (playerState) => {
+    const { duration, videoWidth, videoHeight } = playerState;
+    setIsReady(true);
+    setSliderValues([0, duration]);
+    setResolution([videoWidth, videoHeight]);
   };
 
   const hnadleOnChangeUrl = (newUrl) => {
