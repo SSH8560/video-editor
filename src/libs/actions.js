@@ -28,7 +28,9 @@ export const getAccessToken = (accessToken, onTakeToken) => {
         throw response;
       }
 
-      onTakeToken(response.access_token);
+      if (response.access_token) {
+        onTakeToken(response.access_token);
+      }
     },
   });
 

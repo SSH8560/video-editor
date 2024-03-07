@@ -50,7 +50,6 @@ const VideoEditor = () => {
   }, [playerState]);
 
   const load = async () => {
-    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
     const ffmpeg = ffmpegRef.current;
     ffmpeg.on("log", ({ message }) => {
       messageRef.current.innerHTML = message;
@@ -61,13 +60,36 @@ const VideoEditor = () => {
       }
     });
 
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(
-        `${baseURL}/ffmpeg-core.wasm`,
-        "application/wasm"
-      ),
-    });
+    if (typeof SharedArrayBuffer === "undefined") {
+      const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
+      await ffmpeg.load({
+        coreURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.js`,
+          "text/javascript"
+        ),
+        wasmURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.wasm`,
+          "application/wasm"
+        ),
+      });
+    } else {
+      const baseURL = "https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/umd";
+      await ffmpeg.load({
+        coreURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.js`,
+          "text/javascript"
+        ),
+        wasmURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.wasm`,
+          "application/wasm"
+        ),
+        workerURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.worker.js`,
+          "text/javascript"
+        ),
+      });
+    }
+
     setIsLoaded(true);
   };
 
@@ -231,30 +253,21 @@ const VideoEditor = () => {
   );
 
   async function convertToGif() {
-    transcode(
-      "gif",
-      createOptionCommandList({ sliderValues, resolution, useEncode: true })
-    );
+    transcode("gif", { sliderValues, resolution, useEncode: true });
   }
 
   async function convertToMp4() {
-    transcode(
-      "mp4",
-      createOptionCommandList({
-        sliderValues,
-        resolution,
-      })
-    );
+    transcode("mp4", {
+      sliderValues,
+      resolution,
+    });
   }
 
   async function convertToMp3() {
-    transcode(
-      "aac",
-      createOptionCommandList({ sliderValues, onlyAudio: false })
-    );
+    transcode("aac", { sliderValues, onlyAudio: true });
   }
 
-  async function transcode(extension, commandList) {
+  async function transcode(extension, options) {
     const ffmpeg = ffmpegRef.current;
     const inputFileName = "input.mp4";
     const outputFileName = `result.${extension}`;
@@ -265,7 +278,12 @@ const VideoEditor = () => {
 
       await ffmpeg.writeFile(inputFileName, await fetchFile(url));
 
-      const command = ["-i", inputFileName, ...commandList, outputFileName];
+      const command = [
+        "-i",
+        inputFileName,
+        createOptionCommandList(options),
+        outputFileName,
+      ];
       await ffmpeg.exec(command);
 
       const data = await ffmpeg.readFile(outputFileName);
