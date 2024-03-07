@@ -1,0 +1,11 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  margin: 16px 0;
+  padding: 0 8px;
+}
+
+.buttons {
+  display: flex;
+  gap: 16px;
+}

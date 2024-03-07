@@ -1,0 +1,35 @@
+.video_editor {
+  min-width: 375px;
+}
+
+@media screen and (min-width: 375px) {
+  .video_editor {
+    width: 70%;
+  }
+}
+
+.progress_header {
+  margin: 0;
+  font-size: 26px;
+}
+
+.progress_desc {
+  color: #aaa;
+  margin: 0;
+  margin-top: 10px;
+}
+
+.video_player {
+  height: 700px;
+  max-height: 700px;
+  width: 100%;
+}
+
+.actions_wrapper {
+  display: flex;
+  justify-content: end;
+}
+
+.edit_controller {
+  padding: 8px;
+}

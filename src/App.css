@@ -1,0 +1,13 @@
+h1 {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.App {
+  display: flex;
+  justify-content: center;
+}

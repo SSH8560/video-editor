@@ -1,0 +1,10 @@
+.edit_resolution {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  grid-template-rows: 1fr;
+}
+
+.input {
+  width: min-content;
+  border: 0;
+}
