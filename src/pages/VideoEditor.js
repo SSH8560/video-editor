@@ -323,4 +323,5 @@ const VideoEditor = () => {
     return commandList;
   }
 };
+
 export default VideoEditor;
