@@ -300,45 +300,45 @@ const VideoEditor = () => {
     } finally {
       setIsTranscoding(false);
     }
-  }
 
-  function createOptionCommandList({
-    sliderValues,
-    resolution,
-    onlyAudio = false,
-    useEncode = false,
-  }) {
-    const commandList = [];
-    if (sliderValues) {
-      const [startTime, endTime] = sliderValues;
-      commandList.push("-ss");
-      commandList.push(`${startTime}`);
-      commandList.push("-to");
-      commandList.push(`${endTime}`);
-    }
+    function createOptionCommandList({
+      sliderValues,
+      resolution,
+      onlyAudio = false,
+      useEncode = false,
+    }) {
+      const commandList = [];
+      if (sliderValues) {
+        const [startTime, endTime] = sliderValues;
+        commandList.push("-ss");
+        commandList.push(`${startTime}`);
+        commandList.push("-to");
+        commandList.push(`${endTime}`);
+      }
 
-    if (onlyAudio) {
-      commandList.push("-vn");
-      commandList.push("-acodec");
-      commandList.push("copy");
+      if (onlyAudio) {
+        commandList.push("-vn");
+        commandList.push("-acodec");
+        commandList.push("copy");
+        return commandList;
+      }
+
+      if (
+        resolution &&
+        resolution[0] !== playerState.videoWidth &&
+        resolution[1] !== playerState.videoHeight
+      ) {
+        commandList.push("-vf");
+        commandList.push(`scale=${resolution[0]}:${resolution[1]}`);
+      }
+
+      if (!useEncode && !commandList.includes("-vf")) {
+        commandList.push("-c");
+        commandList.push("copy");
+      }
+
       return commandList;
     }
-
-    if (
-      resolution &&
-      resolution[0] !== playerState.videoWidth &&
-      resolution[1] !== playerState.videoHeight
-    ) {
-      commandList.push("-vf");
-      commandList.push(`scale=${resolution[0]}:${resolution[1]}`);
-    }
-
-    if (!useEncode && !commandList.includes("-vf")) {
-      commandList.push("-c");
-      commandList.push("copy");
-    }
-
-    return commandList;
   }
 };
 
