@@ -1,11 +1,6 @@
 .video_editor {
-  min-width: 375px;
-}
-
-@media screen and (min-width: 375px) {
-  .video_editor {
-    width: 70%;
-  }
+  max-width: 100%;
+  padding: 0 8px;
 }
 
 .progress_header {
@@ -19,10 +14,8 @@
   margin-top: 10px;
 }
 
-.video_player {
-  height: 700px;
-  max-height: 700px;
-  width: 100%;
+.video_content {
+  max-height: 800px;
 }
 
 .actions_wrapper {
@@ -31,5 +24,8 @@
 }
 
 .edit_controller {
-  padding: 8px;
+  padding: 16px;
+  margin-top: 16px;
+  background-color: var(--backgroud-color-secondary);
+  border-radius: 5px;
 }

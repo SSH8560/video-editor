@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Slider } from "antd";
-import { TimeToSeconds, secondsToTime } from "../libs/utils";
 import {
   Accordion,
+  Button,
   DropdownButton,
   DropdownItem,
   Modal,
@@ -14,29 +14,41 @@ import { fetchFile, toBlobURL } from "@ffmpeg/util";
 
 import styles from "./VideoEditor.module.css";
 import { fetchBlob, getAccessToken, showVideoPicker } from "../libs/actions";
+import { TimeToSeconds, secondsToTime } from "../libs/utils";
 import { MIME } from "../libs/constants";
 import VideoPlayer from "../components/VideoPlayer";
 import VideoInputImage from "../components/VideoInputImage";
-import VideoEditorHeader from "../components/VideoEditorHeader";
+import VideoEditorMenu from "../components/VideoEditorMenu";
 import EditResolution from "../components/EditResolution";
 
 const VideoEditor = () => {
+  const videoEditorRef = useRef();
+  const videoContentRef = useRef();
   const playerRef = useRef();
   const ffmpegRef = useRef(new FFmpeg());
   const messageRef = useRef();
   const accessTokenRef = useRef();
+  const isMultiThread = useRef(false);
+  const isEditorReadyRef = useRef();
 
-  const [isLoaded, setIsLoaded] = useState();
-  const [isLoadingVideo, setIsLoadingVideo] = useState();
-  const [isTranscoding, setIsTranscoding] = useState();
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoadingVideo, setIsLoadingVideo] = useState(false);
+  const [isTranscoding, setIsTranscoding] = useState(false);
+  const [isEditorReady, setIsEditorReady] = useState(false);
+
+  const [screenWidth, setScreenWidth] = useState();
   const [currentProgressSeconds, setCurrentProgressSeconds] = useState(0);
   const [url, setUrl] = useState();
   const [playerState, setPlayerState] = useState();
   const [sliderValues, setSliderValues] = useState([0, 0]);
   const [resolution, setResolution] = useState();
-  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    setScreenWidth(window.innerWidth);
+    window.addEventListener("resize", () => {
+      handleOnChangeScreenWidth(window.innerWidth);
+    });
+
     load();
   }, []);
 
@@ -48,6 +60,14 @@ const VideoEditor = () => {
       }
     }
   }, [playerState]);
+
+  useEffect(() => {
+    if (isEditorReady) {
+      const $videoReact = document.querySelector(".video-react-fluid");
+      const wrapperWidth = videoContentRef.current.clientWidth;
+      $videoReact.style = `${$videoReact.style.cssText} max-width:${wrapperWidth}px; width:${wrapperWidth}px;`;
+    }
+  }, [screenWidth]);
 
   const load = async () => {
     const ffmpeg = ffmpegRef.current;
@@ -72,6 +92,8 @@ const VideoEditor = () => {
           "application/wasm"
         ),
       });
+      isMultiThread.current = false;
+      console.log("Single thread Ready");
     } else {
       const baseURL = "https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/umd";
       await ffmpeg.load({
@@ -88,20 +110,50 @@ const VideoEditor = () => {
           "text/javascript"
         ),
       });
+      console.log("Multi thread Ready");
+      isMultiThread.current = true;
     }
 
     setIsLoaded(true);
   };
 
-  const initEditor = (playerState) => {
+  const initiateEditor = (playerState) => {
     const { duration, videoWidth, videoHeight } = playerState;
-    setIsReady(true);
+    handleOnChangeIsEditorReady(true);
     setSliderValues([0, duration]);
     setResolution([videoWidth, videoHeight]);
+    setReactVideoWidthAndMaxWidth();
+    setVideoPlayerWidthAndMaxWidth();
+
+    function setVideoPlayerWidthAndMaxWidth() {
+      const aspect = parseFloat(videoWidth / videoHeight);
+      const $videoPlayer = document.querySelector(".VideoPlayer");
+
+      const videoPlayerMaxHeight = parseInt(
+        window.getComputedStyle($videoPlayer).getPropertyValue("max-height")
+      );
+
+      const maxWidth = videoPlayerMaxHeight * aspect;
+      $videoPlayer.style = `${$videoPlayer.style.cssText} max-width:${maxWidth}px;`;
+    }
   };
 
-  const hnadleOnChangeUrl = (newUrl) => {
-    setIsReady(false);
+  const handleOnChangeIsEditorReady = (isReady) => {
+    setIsEditorReady(isReady);
+    isEditorReadyRef.current = isReady;
+  };
+
+  const handleOnChangeScreenWidth = (screenWidth) => {
+    const $videoReact = document.querySelector(".video-react-fluid");
+    if ($videoReact) {
+      const wrapperWidth = videoContentRef.current.clientWidth;
+      $videoReact.style = `${$videoReact.style.cssText} max-width:${wrapperWidth}px; width:${wrapperWidth}px;`;
+      setScreenWidth(screenWidth);
+    }
+  };
+
+  const handleOnChangeUrl = (newUrl) => {
+    handleOnChangeIsEditorReady(false);
     URL.revokeObjectURL(url);
     setUrl(newUrl);
   };
@@ -112,9 +164,8 @@ const VideoEditor = () => {
     }
 
     setPlayerState(state);
-
-    if (prevState.duration !== state.duration) {
-      initEditor(state);
+    if (!isEditorReadyRef.current) {
+      initiateEditor(state);
     }
   };
 
@@ -147,8 +198,8 @@ const VideoEditor = () => {
   return (
     <>
       {isLoaded ? (
-        <div className={styles.video_editor}>
-          <VideoEditorHeader
+        <div ref={videoEditorRef} className={styles.video_editor}>
+          <VideoEditorMenu
             onClickGoogleDrive={() => {
               getAccessToken(accessTokenRef.current, (accessToken) => {
                 accessTokenRef.current = accessToken;
@@ -156,12 +207,13 @@ const VideoEditor = () => {
               });
             }}
             onClickVideoInputButton={(event) => {
-              hnadleOnChangeUrl(URL.createObjectURL(event.target.files[0]));
+              handleOnChangeUrl(URL.createObjectURL(event.target.files[0]));
             }}
           />
-          <div className={styles.video_player}>
+          <div ref={videoContentRef} className={styles.video_content}>
             {url ? (
               <VideoPlayer
+                maxHeight={800}
                 playerRef={playerRef}
                 url={url}
                 onChangePlayerState={handleOnChangePlayerState}
@@ -169,58 +221,56 @@ const VideoEditor = () => {
             ) : (
               <VideoInputImage
                 onChange={(event) => {
-                  hnadleOnChangeUrl(URL.createObjectURL(event.target.files[0]));
+                  handleOnChangeUrl(URL.createObjectURL(event.target.files[0]));
                 }}
               />
             )}
           </div>
-          <div className={styles.edit_controller}>
-            {!isReady || (
-              <>
-                <Slider
-                  value={sliderValues}
-                  onChange={handleOnChangeSliderValues}
-                  tooltip={{
-                    formatter: (value) => secondsToTime(value),
-                  }}
-                  range={{ draggableTrack: true }}
-                  min={0}
-                  max={playerState?.duration ?? 0}
-                />
-                <Accordion
-                  style={{
-                    margin: "8px 0px",
-                  }}
-                >
-                  <Accordion.Header>옵션</Accordion.Header>
-                  <Accordion.Body>
-                    <Accordion>
-                      <Accordion.Header>해상도</Accordion.Header>
-                      <Accordion.Body>
-                        <EditResolution
-                          resolution={resolution}
-                          setResolution={setResolution}
-                        />
-                      </Accordion.Body>
-                    </Accordion>
-                  </Accordion.Body>
-                </Accordion>
-                <div className={styles.actions_wrapper}>
-                  <DropdownButton title="저장하기">
-                    <DropdownItem as="button" onClick={convertToGif}>
-                      GIF
-                    </DropdownItem>
-                    <DropdownItem as="button" onClick={convertToMp4}>
-                      MP4
-                    </DropdownItem>
-                    <DropdownItem as="button" onClick={convertToMp3}>
-                      MP3
-                    </DropdownItem>
-                  </DropdownButton>
-                </div>
-              </>
-            )}
-          </div>
+          {!isEditorReady || (
+            <div className={styles.edit_controller}>
+              <Slider
+                value={sliderValues}
+                onChange={handleOnChangeSliderValues}
+                tooltip={{
+                  formatter: (value) => secondsToTime(value),
+                }}
+                range={{ draggableTrack: true }}
+                min={0}
+                max={playerState?.duration ?? 0}
+              />
+              <Accordion
+                style={{
+                  margin: "8px 0px",
+                }}
+              >
+                <Accordion.Header>옵션</Accordion.Header>
+                <Accordion.Body>
+                  <Accordion>
+                    <Accordion.Header>해상도</Accordion.Header>
+                    <Accordion.Body>
+                      <EditResolution
+                        resolution={resolution}
+                        setResolution={setResolution}
+                      />
+                    </Accordion.Body>
+                  </Accordion>
+                </Accordion.Body>
+              </Accordion>
+              <div className={styles.actions_wrapper}>
+                <DropdownButton title="저장하기" variant="secondary">
+                  <DropdownItem as="button" onClick={convertToGif}>
+                    GIF
+                  </DropdownItem>
+                  <DropdownItem as="button" onClick={convertToMp4}>
+                    MP4
+                  </DropdownItem>
+                  <DropdownItem as="button" onClick={convertToMp3}>
+                    MP3
+                  </DropdownItem>
+                </DropdownButton>
+              </div>
+            </div>
+          )}
         </div>
       ) : null}
       <Modal show={isLoadingVideo}>
@@ -281,9 +331,14 @@ const VideoEditor = () => {
       const command = [
         "-i",
         inputFileName,
-        ...createOptionCommandList(options),
+        ...createOptionCommandList({
+          ...options,
+          useMultiThread: isMultiThread.current,
+        }),
         outputFileName,
       ];
+
+      console.log(`exec : ffmpeg ${command.join(" ")}`);
       await ffmpeg.exec(command);
 
       const data = await ffmpeg.readFile(outputFileName);
@@ -298,7 +353,6 @@ const VideoEditor = () => {
     } catch (e) {
       alert(e);
     } finally {
-      setIsTranscoding(false);
     }
 
     function createOptionCommandList({
@@ -306,8 +360,15 @@ const VideoEditor = () => {
       resolution,
       onlyAudio = false,
       useEncode = false,
+      useMultiThread = false,
     }) {
       const commandList = [];
+      if (useMultiThread) {
+        const threadNumber = parseInt(navigator.hardwareConcurrency / 2);
+        commandList.push("-threads");
+        commandList.push(`${threadNumber}`);
+      }
+
       if (sliderValues) {
         const [startTime, endTime] = sliderValues;
         commandList.push("-ss");
@@ -339,6 +400,12 @@ const VideoEditor = () => {
 
       return commandList;
     }
+  }
+
+  function setReactVideoWidthAndMaxWidth() {
+    const $videoReact = document.querySelector(".video-react-fluid");
+    const wrapperWidth = videoContentRef.current.clientWidth;
+    $videoReact.style = `${$videoReact.style.cssText} max-width:${wrapperWidth}px; width:${wrapperWidth}px;`;
   }
 };
 

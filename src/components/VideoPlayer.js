@@ -1,26 +1,32 @@
-import { memo } from "react";
+import { memo, useEffect } from "react";
 import { Player, BigPlayButton, LoadingSpinner, ControlBar } from "video-react";
 import "video-react/dist/video-react.css";
 
 const VideoPlayer = memo(
-  ({ url, playerRef, onChangePlayerState }) => {
+  ({ maxHeight, url, playerRef, onChangePlayerState }) => {
     return (
-      <Player
-        src={url}
-        width={"100%"}
-        height={"100%"}
-        fluid={false}
-        ref={(player) => {
-          if (player && playerRef.current !== player) {
-            playerRef.current = player;
-            playerRef.current.subscribeToStateChange(onChangePlayerState);
-          }
+      <div
+        className="VideoPlayer"
+        style={{
+          maxHeight,
         }}
       >
-        <BigPlayButton position="center" />
-        <LoadingSpinner />
-        <ControlBar></ControlBar>
-      </Player>
+        <Player
+          src={url}
+          width={"100%"}
+          fluid={true}
+          ref={(player) => {
+            if (player && playerRef.current !== player) {
+              playerRef.current = player;
+              playerRef.current.subscribeToStateChange(onChangePlayerState);
+            }
+          }}
+        >
+          <BigPlayButton position="center" />
+          <LoadingSpinner />
+          <ControlBar></ControlBar>
+        </Player>
+      </div>
     );
   },
   (prevProps, nextProps) => {

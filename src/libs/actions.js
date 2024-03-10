@@ -24,10 +24,10 @@ export const getAccessToken = (accessToken, onTakeToken) => {
     client_id: clientId,
     scope: scope,
     callback: async (response) => {
-      if (response.error !== undefined) {
+      console.log(response);
+      if (response.error) {
         throw response;
       }
-
       if (response.access_token) {
         onTakeToken(response.access_token);
       }
@@ -43,14 +43,14 @@ export const getAccessToken = (accessToken, onTakeToken) => {
 
 export const fetchBlob = async (accessToken, fileId) => {
   try {
-    const response = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
+    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
     return await response.blob();
   } catch (error) {
     console.error("Error fetching Blob data:", error);

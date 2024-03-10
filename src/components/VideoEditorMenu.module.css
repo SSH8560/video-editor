@@ -1,0 +1,7 @@
+.video_editor_menu {
+  display: flex;
+  justify-content: end;
+  align-items: end;
+  margin-bottom: 16px;
+  background-color: var(--backgroud-color);
+}

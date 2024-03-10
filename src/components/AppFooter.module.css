@@ -1,0 +1,14 @@
+.app_footer {
+  max-width: var(--app-max-width);
+  padding: 0 16px;
+  margin: 0 auto;
+  color: var(--font-color);
+}
+
+.app_footer_container {
+  display: flex;
+  padding: 16px 8px;
+  border-top: 1px solid var(--border-color);
+  justify-content: space-between;
+  align-items: top;
+}

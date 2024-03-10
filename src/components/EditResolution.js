@@ -12,11 +12,9 @@ const EditResolution = ({ resolution, setResolution }) => {
         type="checkbox"
         checked={!!aspectRatio}
         onChange={(e) => {
-          if (aspectRatio) {
-            setAspectRatio(undefined);
-          } else {
-            setAspectRatio(resolution[0] / resolution[1]);
-          }
+          aspectRatio
+            ? setAspectRatio(undefined)
+            : setAspectRatio(resolution[0] / resolution[1]);
         }}
       />
       <label htmlFor="width">가로</label>

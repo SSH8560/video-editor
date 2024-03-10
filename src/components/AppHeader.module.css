@@ -1,0 +1,30 @@
+.app_header {
+  max-width: var(--app-max-width);
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.app_header_container {
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  padding: 16px 8px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app_title {
+  color: var(--font-color);
+  font-weight: bold;
+  font-size: 40px;
+}
+.dark_mode_button {
+  padding: 8px;
+  border-radius: 50%;
+  background-color: var(--font-color);
+}
+
+.dark_mode_button__img {
+  width: 24px;
+  height: 24px;
+  fill: var(--backgroud-color);
+}
