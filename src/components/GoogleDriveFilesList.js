@@ -42,6 +42,7 @@ const GoogleDriveFilesList = ({ onClickFile, onClickCancelButton }) => {
             {processedFileList.map((it) => {
               return (
                 <li
+                  key={it.id}
                   className={styles.list_item}
                   onClick={() => onClickFile(it.id)}
                 >
