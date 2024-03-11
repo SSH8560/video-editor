@@ -14,7 +14,7 @@
       ]
     },
     {
-      "source": "https://lh3.googleusercontent.com/(.*)",
+      "source": "https://lh3\\.googleusercontent\\.com/(.*)",
       "headers": [
         {
           "key": "Access-Control-Allow-Methods",
