@@ -1,4 +1,4 @@
-import { clientId, scope } from "./constants";
+import { clientId, proejctUrl, scope } from "./constants";
 
 export const showVideoPicker = (accessToken, onPicked) => {
   const { gapi, google } = window;
@@ -80,7 +80,7 @@ export const redirectToGoogleOauthEndpoint = () => {
   const url = "https://accounts.google.com/o/oauth2/v2/auth";
   const searchParams = new URLSearchParams();
   searchParams.set("client_id", clientId);
-  searchParams.set("redirect_uri", "http://localhost:3000/auth");
+  searchParams.set("redirect_uri", `${proejctUrl}/auth`);
   searchParams.set("response_type", "token");
   searchParams.set("scope", scope);
 

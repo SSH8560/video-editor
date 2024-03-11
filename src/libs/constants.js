@@ -1,3 +1,4 @@
+export const proejctUrl = "https://video-editor-phi.vercel.app";
 export const clientId =
   "146031537994-v8iepkui8dscj04urnsmuvguknvajem4.apps.googleusercontent.com";
 export const scope = "https://www.googleapis.com/auth/drive.readonly";
