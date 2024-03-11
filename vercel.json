@@ -9,7 +9,7 @@
         },
         {
           "key": "cross-origin-embedder-policy",
-          "value": "require-corp"
+          "value": "credentialless"
         }
       ]
     }
