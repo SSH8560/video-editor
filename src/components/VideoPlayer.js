@@ -1,4 +1,4 @@
-import { memo, useEffect } from "react";
+import { memo } from "react";
 import { Player, BigPlayButton, LoadingSpinner, ControlBar } from "video-react";
 import "video-react/dist/video-react.css";
 

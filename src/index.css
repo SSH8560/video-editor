@@ -1,14 +1,17 @@
 :root {
   --border-color: #f3f3f3;
-  --app-max-width: 1024px;
+  --app-max-width: 1280px;
 
   --backgroud-color: white;
+  --backgroud-color-secondary: #e1e1e1;
+  --backgroud-color-tertiary: #c1c1c1;
   --font-color: black;
 }
 
 html.dark {
   --backgroud-color: black;
   --backgroud-color-secondary: #1c1c1c;
+  --backgroud-color-tertiary: #212529;
   --font-color: #f3f3f3;
 }
 
@@ -37,4 +40,10 @@ ul {
 }
 li {
   list-style-type: none;
+}
+
+.accordion {
+  border-radius: 5px;
+  overflow: hidden;
+  background-color: var(--backgroud-color-tertiary);
 }

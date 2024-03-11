@@ -18,7 +18,8 @@
   max-height: 800px;
 }
 
-.actions_wrapper {
+.buttons {
+  margin-top: 16px;
   display: flex;
   justify-content: end;
 }
@@ -28,4 +29,33 @@
   margin-top: 16px;
   background-color: var(--backgroud-color-secondary);
   border-radius: 5px;
+}
+
+.slider {
+  padding: 12px;
+  margin-bottom: 16px;
+  border-radius: 5px;
+  background-color: var(--backgroud-color-tertiary);
+}
+
+.time_line_value {
+  font-weight: bold;
+}
+
+.toast_wrapper {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.toast_content {
+  display: flex;
+  width: 100%;
+
+  justify-content: space-between;
+}
+
+.toast_close_button {
+  background-color: inherit;
 }

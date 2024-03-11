@@ -1,10 +1,16 @@
 .edit_resolution {
+  width: 200px;
   display: grid;
   grid-template-columns: 80px 1fr;
   grid-template-rows: 1fr;
 }
 
 .input {
-  width: min-content;
+  background-color: inherit;
+  width: 100%;
   border: 0;
+}
+
+.checkbox {
+  width: fit-content;
 }

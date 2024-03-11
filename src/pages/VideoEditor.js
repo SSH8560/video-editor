@@ -1,25 +1,28 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Slider } from "antd";
+import { useEffect, useRef, useState } from "react";
+import { Button, Slider } from "antd";
 import {
   Accordion,
-  Button,
   DropdownButton,
   DropdownItem,
   Modal,
+  ModalBody,
   ProgressBar,
   Spinner,
+  Toast,
 } from "react-bootstrap";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
 
 import styles from "./VideoEditor.module.css";
-import { fetchBlob, getAccessToken, showVideoPicker } from "../libs/actions";
+import { fetchBlob, redirectToGoogleOauthEndpoint } from "../libs/actions";
 import { TimeToSeconds, secondsToTime } from "../libs/utils";
 import { MIME } from "../libs/constants";
 import VideoPlayer from "../components/VideoPlayer";
 import VideoInputImage from "../components/VideoInputImage";
 import VideoEditorMenu from "../components/VideoEditorMenu";
 import EditResolution from "../components/EditResolution";
+import GoogleDriveFilesList from "../components/GoogleDriveFilesList";
+import { useSearchParams } from "react-router-dom";
 
 const VideoEditor = () => {
   const videoEditorRef = useRef();
@@ -27,14 +30,19 @@ const VideoEditor = () => {
   const playerRef = useRef();
   const ffmpegRef = useRef(new FFmpeg());
   const messageRef = useRef();
-  const accessTokenRef = useRef();
   const isMultiThread = useRef(false);
   const isEditorReadyRef = useRef();
+  const tokenRef = useRef();
+
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isSelectingGoogleDriveFiles, setIsSelectingGoogleDriveFiles] =
+    useState(false);
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
   const [isTranscoding, setIsTranscoding] = useState(false);
   const [isEditorReady, setIsEditorReady] = useState(false);
+  const [isShowingCompleteToast, setIsShowingCompleteToast] = useState(false);
 
   const [screenWidth, setScreenWidth] = useState();
   const [currentProgressSeconds, setCurrentProgressSeconds] = useState(0);
@@ -48,6 +56,16 @@ const VideoEditor = () => {
     window.addEventListener("resize", () => {
       handleOnChangeScreenWidth(window.innerWidth);
     });
+
+    const token = JSON.parse(sessionStorage.getItem("token"));
+    if (token && parseInt(token.expiresIn) > new Date().getTime()) {
+      tokenRef.current = token;
+    }
+
+    if (searchParams.get("redirect_from") === "auth") {
+      setIsSelectingGoogleDriveFiles(true);
+      setSearchParams();
+    }
 
     load();
   }, []);
@@ -180,19 +198,25 @@ const VideoEditor = () => {
       newValues[1] = playerState.duration;
     }
 
-    playerRef.current.seek(sliderValues[0]);
+    playerRef.current.seek(newValues[0]);
     setSliderValues(newValues);
   };
 
-  const handleOnPicked = async (data) => {
-    if (data.action === "picked") {
-      const fileData = data.docs[0];
+  const handleOnClickGoogleDriveFile = async (id) => {
+    setIsSelectingGoogleDriveFiles(false);
+    setIsLoadingVideo(true);
+    const blob = await fetchBlob(tokenRef.current.accessToken, id);
+    setIsLoadingVideo(false);
+    setUrl(URL.createObjectURL(blob));
+  };
 
-      setIsLoadingVideo(true);
-      const blob = await fetchBlob(accessTokenRef.current, fileData.id);
-      setIsLoadingVideo(false);
-      setUrl(URL.createObjectURL(blob));
+  const handleOnChangeIsShowingCompleteToast = (isShowing) => {
+    if (isShowing) {
+      setTimeout(() => {
+        setIsShowingCompleteToast(false);
+      }, 5000);
     }
+    setIsShowingCompleteToast(isShowing);
   };
 
   return (
@@ -201,10 +225,11 @@ const VideoEditor = () => {
         <div ref={videoEditorRef} className={styles.video_editor}>
           <VideoEditorMenu
             onClickGoogleDrive={() => {
-              getAccessToken(accessTokenRef.current, (accessToken) => {
-                accessTokenRef.current = accessToken;
-                showVideoPicker(accessTokenRef.current, handleOnPicked);
-              });
+              if (tokenRef.current) {
+                setIsSelectingGoogleDriveFiles(true);
+              } else {
+                redirectToGoogleOauthEndpoint();
+              }
             }}
             onClickVideoInputButton={(event) => {
               handleOnChangeUrl(URL.createObjectURL(event.target.files[0]));
@@ -228,21 +253,32 @@ const VideoEditor = () => {
           </div>
           {!isEditorReady || (
             <div className={styles.edit_controller}>
-              <Slider
-                value={sliderValues}
-                onChange={handleOnChangeSliderValues}
-                tooltip={{
-                  formatter: (value) => secondsToTime(value),
-                }}
-                range={{ draggableTrack: true }}
-                min={0}
-                max={playerState?.duration ?? 0}
-              />
-              <Accordion
-                style={{
-                  margin: "8px 0px",
-                }}
-              >
+              <div className={styles.slider}>
+                <span htmlFor="slider">
+                  타임라인 :{" "}
+                  <span className={styles.time_line_value}>{`${secondsToTime(
+                    sliderValues[0]
+                  )}`}</span>
+                  부터{" "}
+                  <span className={styles.time_line_value}>{`${secondsToTime(
+                    sliderValues[1]
+                  )}`}</span>
+                  까지
+                </span>
+                <Slider
+                  id="slider"
+                  value={sliderValues}
+                  onChange={handleOnChangeSliderValues}
+                  tooltip={{
+                    formatter: (value) => secondsToTime(value),
+                  }}
+                  range={{ draggableTrack: true }}
+                  min={0}
+                  max={playerState?.duration ?? 0}
+                />
+              </div>
+
+              <Accordion>
                 <Accordion.Header>옵션</Accordion.Header>
                 <Accordion.Body>
                   <Accordion>
@@ -256,7 +292,7 @@ const VideoEditor = () => {
                   </Accordion>
                 </Accordion.Body>
               </Accordion>
-              <div className={styles.actions_wrapper}>
+              <div className={styles.buttons}>
                 <DropdownButton title="저장하기" variant="secondary">
                   <DropdownItem as="button" onClick={convertToGif}>
                     GIF
@@ -273,13 +309,21 @@ const VideoEditor = () => {
           )}
         </div>
       ) : null}
+      <Modal show={isSelectingGoogleDriveFiles}>
+        <GoogleDriveFilesList
+          onClickFile={handleOnClickGoogleDriveFile}
+          onClickCancelButton={() => setIsSelectingGoogleDriveFiles(false)}
+        />
+      </Modal>
       <Modal show={isLoadingVideo}>
         <Modal.Header>
           <h2 className={styles.progress_header}>불러오는 중...</h2>
+        </Modal.Header>
+        <ModalBody>
           <Spinner animation="border" role="status">
             <span className="visually-hidden">Loading...</span>
           </Spinner>
-        </Modal.Header>
+        </ModalBody>
       </Modal>
       <Modal show={isTranscoding}>
         <Modal.Header>
@@ -299,6 +343,21 @@ const VideoEditor = () => {
           <p ref={messageRef} className={styles.progress_desc}></p>
         </Modal.Body>
       </Modal>
+      <div className={styles.toast_wrapper}>
+        <Toast show={isShowingCompleteToast}>
+          <Toast.Body>
+            <div className={styles.toast_content}>
+              <span>저장하기 완료!</span>
+              <button
+                className={styles.toast_close_button}
+                onClick={() => setIsShowingCompleteToast(false)}
+              >
+                X
+              </button>
+            </div>
+          </Toast.Body>
+        </Toast>
+      </div>
     </>
   );
 
@@ -350,9 +409,12 @@ const VideoEditor = () => {
       link.href = gifUrl;
       link.setAttribute("download", "");
       link.click();
+
+      handleOnChangeIsShowingCompleteToast(true);
     } catch (e) {
       alert(e);
     } finally {
+      setIsTranscoding(false);
     }
 
     function createOptionCommandList({

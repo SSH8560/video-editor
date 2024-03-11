@@ -9,6 +9,7 @@ const EditResolution = ({ resolution, setResolution }) => {
       <label htmlFor="use_ratio">비율 유지</label>
       <input
         id="use_ratio"
+        className={styles.checkbox}
         type="checkbox"
         checked={!!aspectRatio}
         onChange={(e) => {

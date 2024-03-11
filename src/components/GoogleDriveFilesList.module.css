@@ -1,0 +1,44 @@
+.container {
+  width: inherit;
+}
+
+.list {
+  height: 600px;
+  display: flex;
+  gap: 16px;
+  flex-flow: row wrap;
+  overflow: auto;
+}
+
+.list_item {
+  width: 128px;
+  height: min-content;
+  cursor: pointer;
+}
+
+.file_thumbnail_img {
+  width: inherit;
+  height: inherit;
+}
+
+.footer {
+  display: flex;
+  justify-content: end;
+  margin-top: 16px;
+}
+
+.query {
+  width: 100%;
+  display: flex;
+  height: fit-content;
+  align-items: end;
+}
+.query_label {
+  margin-right: 8px;
+}
+
+.query_input {
+  border: none;
+  border-bottom: 1px solid black;
+  font-size: 14px;
+}
