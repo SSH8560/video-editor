@@ -238,7 +238,7 @@ const VideoEditor = () => {
           <div ref={videoContentRef} className={styles.video_content}>
             {url ? (
               <VideoPlayer
-                maxHeight={800}
+                maxHeight={700}
                 playerRef={playerRef}
                 url={url}
                 onChangePlayerState={handleOnChangePlayerState}
