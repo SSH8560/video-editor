@@ -1,8 +1,8 @@
-import { clientId, proejctUrl, scope } from "./constants";
+import { clientId, googleApiUrl, proejctUrl, scope } from "./constants";
 
 export const fetchBlob = async (accessToken, fileId) => {
   try {
-    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    const url = `${googleApiUrl}/drive/v3/files/${fileId}?alt=media`;
 
     const response = await fetch(url, {
       headers: {
@@ -24,7 +24,7 @@ export const fetchVideoFilesList = async (accessToken) => {
     params.set("fields", "files(id,name,thumbnailLink)");
 
     const response = await fetch(
-      `https://www.googleapis.com/drive/v3/files${
+      `${googleApiUrl}/drive/v3/files${
         params.toString() ? `?${params.toString()}` : ""
       }`
     );

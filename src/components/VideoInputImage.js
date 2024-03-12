@@ -2,7 +2,7 @@ import { useRef } from "react";
 import videoInputPlaceholder from "../assets/images/video_placeholder.png";
 
 const VideoInputImage = ({ onChange }) => {
-  const inputRef = useRef();
+  const fileInputRef = useRef();
 
   return (
     <div
@@ -17,10 +17,10 @@ const VideoInputImage = ({ onChange }) => {
         }}
         src={videoInputPlaceholder}
         alt="placeholder"
-        onClick={() => inputRef.current.click()}
+        onClick={() => fileInputRef.current.click()}
       />
       <input
-        ref={inputRef}
+        ref={fileInputRef}
         type="file"
         accept="video/*"
         style={{ display: "none" }}
