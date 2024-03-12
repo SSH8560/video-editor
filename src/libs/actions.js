@@ -1,49 +1,8 @@
-import { clientId, scope } from "./constants";
-
-export const showVideoPicker = (accessToken, onPicked) => {
-  const { gapi, google } = window;
-
-  gapi.load("picker", () => {
-    const view = new google.picker.View(google.picker.ViewId.DOCS);
-    view.setMimeTypes("video/mp4");
-
-    const picker = new google.picker.PickerBuilder()
-      .enableFeature(google.picker.Feature.NAV_HIDDEN)
-      .setOrigin("http://localhost:3000")
-      .setOAuthToken(accessToken)
-      .addView(view)
-      .setCallback(onPicked)
-      .build();
-
-    picker.setVisible(true);
-  });
-};
-
-export const getAccessToken = (accessToken, onTakeToken) => {
-  const tokenClient = window.google.accounts.oauth2.initTokenClient({
-    client_id: clientId,
-    scope: scope,
-    callback: async (response) => {
-      console.log(response);
-      if (response.error) {
-        throw response;
-      }
-      if (response.access_token) {
-        onTakeToken(response.access_token);
-      }
-    },
-  });
-
-  if (accessToken) {
-    tokenClient.requestAccessToken({ prompt: "" });
-  } else {
-    tokenClient.requestAccessToken({ prompt: "consent" });
-  }
-};
+import { clientId, googleApiUrl, proejctUrl, scope } from "./constants";
 
 export const fetchBlob = async (accessToken, fileId) => {
   try {
-    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    const url = `${googleApiUrl}/drive/v3/files/${fileId}?alt=media`;
 
     const response = await fetch(url, {
       headers: {
@@ -65,7 +24,7 @@ export const fetchVideoFilesList = async (accessToken) => {
     params.set("fields", "files(id,name,thumbnailLink)");
 
     const response = await fetch(
-      `https://www.googleapis.com/drive/v3/files${
+      `${googleApiUrl}/drive/v3/files${
         params.toString() ? `?${params.toString()}` : ""
       }`
     );
@@ -80,7 +39,7 @@ export const redirectToGoogleOauthEndpoint = () => {
   const url = "https://accounts.google.com/o/oauth2/v2/auth";
   const searchParams = new URLSearchParams();
   searchParams.set("client_id", clientId);
-  searchParams.set("redirect_uri", "http://localhost:3000/auth");
+  searchParams.set("redirect_uri", `${proejctUrl}/auth`);
   searchParams.set("response_type", "token");
   searchParams.set("scope", scope);
 
